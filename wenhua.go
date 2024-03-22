@@ -122,9 +122,9 @@ func (w *Wenhua) SubscribeQuote(subjectKey oqgo.SubjectKey, c func(oqgo.ITick)) 
 	}
 	publisher, ok := w.subscribedSymbols.LoadOrStore(symbol, oqgo.NewPublisher[oqgo.ITick]())
 	if !ok {
+		w.client.SubscribeTick(symbol)
 		w.ctx.Info("新订阅行情：", string(subjectKey))
 	}
-	w.client.SubscribeTick(symbol)
 	return publisher.Subscribe(c), nil
 }
 func (w *Wenhua) Name() string {
