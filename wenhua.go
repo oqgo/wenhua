@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 
 	wenhuago "github.com/kkqy/wenhua-go"
@@ -15,15 +14,29 @@ import (
 )
 
 type Wenhua struct {
-	ctx    context.Context
+	ctx    oqgo.IModuleHandle
 	client *wenhuago.Client
 
-	subjectKeyMap sync.Map // 用于将wenhua的symbol转换为oqgo的subjectKey
+	subjectKeyMap     oqgo.SyncMap[string, oqgo.SubjectKey] // 用于将wenhua的symbol转换为oqgo的subjectKey
+	subscribedSymbols oqgo.SyncMap[string, *oqgo.Publisher[oqgo.ITick]]
+}
+
+func (w *Wenhua) onNewTick(t wenhuago.Tick) {
+	publisher, ok := w.subscribedSymbols.Load(t.Symbol)
+	if !ok {
+		return
+	}
+	subjectKey, ok := w.subjectKeyMap.Load(t.Symbol)
+	if !ok {
+		return
+	}
+	tradingDay := chnfutures.TradingDayByTime(t.Time)
+	publisher.Publish(oqgo.NewBaseTick(subjectKey, oqgo.Price(t.LastPrice), t.Time, tradingDay))
 }
 
 func (w *Wenhua) Init(ctx oqgo.IModuleHandle) error {
 	w.ctx = ctx
-	c, err := wenhuago.NewClient(context.Background(), "60.190.146.149:8200")
+	c, err := wenhuago.NewClient(context.Background(), "60.190.146.149:8200", w.onNewTick)
 	if err != nil {
 		return err
 	}
@@ -102,6 +115,18 @@ func (w *Wenhua) MinuteKlinesUntilAligned(subjectKey oqgo.SubjectKey, count int,
 	return oKlines, nil
 }
 
+func (w *Wenhua) SubscribeQuote(subjectKey oqgo.SubjectKey, c func(oqgo.ITick)) (oqgo.IQuoteSubscriber, error) {
+	symbol, err := w.convertSubjectKeyToSymbol(subjectKey)
+	if err != nil {
+		return nil, err
+	}
+	publisher, ok := w.subscribedSymbols.LoadOrStore(symbol, oqgo.NewPublisher[oqgo.ITick]())
+	if !ok {
+		w.ctx.Info("新订阅行情：", string(subjectKey))
+	}
+	w.client.SubscribeTick(symbol)
+	return publisher.Subscribe(c), nil
+}
 func (w *Wenhua) Name() string {
 	return "github.com/oqgo/wenhua"
 }
