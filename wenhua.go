@@ -88,7 +88,6 @@ func (w *Wenhua) MinuteKlinesByDatetime(subjectKey oqgo.SubjectKey, startTime ti
 }
 
 func (w *Wenhua) MinuteKlinesByTradingDay(subjectKey oqgo.SubjectKey, tradingDay time.Time) ([]oqgo.Kline, error) {
-	tradingDay = chnfutures.TradingDayByTime(tradingDay)
 	startTime, endTime := chnfutures.TimeRangeByTradingDay(tradingDay) // 获取交易日的开始和结束时间
 	return w.MinuteKlinesByDatetime(subjectKey, startTime, endTime)    // 调用新的方法获取分钟线数据
 }
