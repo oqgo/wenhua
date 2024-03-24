@@ -16,10 +16,10 @@ func ConvertKlines(subjectKey oqgo.SubjectKey, duration time.Duration, klines []
 			Duration:    time.Minute,
 			TradingDate: chnfutures.TradingDayByTime(kline.Time),
 			Time:        kline.Time,
-			OpenPrice:   oqgo.Price(kline.Open),
-			HighPrice:   oqgo.Price(kline.High),
-			LowPrice:    oqgo.Price(kline.Low),
-			ClosePrice:  oqgo.Price(kline.Close),
+			OpenPrice:   float64(kline.Open),
+			HighPrice:   float64(kline.High),
+			LowPrice:    float64(kline.Low),
+			ClosePrice:  float64(kline.Close),
 		}
 	}
 	return oKlines
