@@ -31,7 +31,7 @@ func (w *Wenhua) onNewTick(t wenhuago.Tick) {
 		return
 	}
 	tradingDay := chnfutures.TradingDayByTime(t.Time)
-	publisher.Publish(oqgo.NewBaseTick(subjectKey, t.LastPrice, t.Time, tradingDay))
+	publisher.Publish(oqgo.NewBaseTick(subjectKey, float64(t.LastPrice), t.Time, tradingDay))
 }
 
 func (w *Wenhua) Init(ctx oqgo.IModuleHandle) error {
