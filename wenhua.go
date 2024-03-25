@@ -65,25 +65,29 @@ func (w *Wenhua) MinuteKlinesByDatetime(subjectKey oqgo.SubjectKey, startTime ti
 	if err != nil {
 		return nil, err
 	}
-	oKlines := make([]oqgo.Kline, 0, 200)
+	res := []oqgo.Kline{}
 	for {
 		klines, err := w.client.Klines(symbol, time.Minute, endTime.Add(-time.Minute), 200)
 		if err != nil {
 			return nil, err
 		}
 		if len(klines) == 0 {
-			return oKlines, nil
+			return res, nil
 		}
-		if klines[0].Time.Before(startTime) {
+		firstTime := klines[0].Time
+		if firstTime.Before(startTime) {
 			for i, kline := range klines {
 				if !kline.Time.Before(startTime) {
-					oKlines = slices.Concat(ConvertKlines(subjectKey, time.Minute, klines[i:]), oKlines)
-					return oKlines, nil
+					res = slices.Concat(ConvertKlines(subjectKey, time.Minute, klines[i:]), res)
+					return res, nil
 				}
 			}
 		}
-		oKlines = slices.Concat(ConvertKlines(subjectKey, time.Minute, klines), oKlines)
-		endTime = oKlines[0].Time
+		res = slices.Concat(ConvertKlines(subjectKey, time.Minute, klines), res)
+		endTime = res[0].Time
+		if firstTime.Equal(startTime) {
+			return res, nil
+		}
 	}
 }
 
