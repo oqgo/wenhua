@@ -33,7 +33,6 @@ func (w *Wenhua) onNewTick(t wenhuago.Tick) {
 	tradingDay := chnfutures.TradingDayByTime(t.Time)
 	publisher.Publish(oqgo.NewBaseTick(subjectKey, float64(t.LastPrice), t.Time, tradingDay))
 }
-
 func (w *Wenhua) Init(ctx oqgo.IModuleHandle) error {
 	w.ctx = ctx
 	c, err := wenhuago.NewClient(context.Background(), "60.190.146.149:8200", w.onNewTick)
@@ -59,7 +58,6 @@ func (w *Wenhua) convertSubjectKeyToSymbol(subjectKey oqgo.SubjectKey) (string, 
 	}
 	return productCode + yearMonth, nil
 }
-
 func (w *Wenhua) MinuteKlinesByDatetime(subjectKey oqgo.SubjectKey, startTime time.Time, endTime time.Time) ([]oqgo.Kline, error) {
 	symbol, err := w.convertSubjectKeyToSymbol(subjectKey)
 	if err != nil {
@@ -90,12 +88,10 @@ func (w *Wenhua) MinuteKlinesByDatetime(subjectKey oqgo.SubjectKey, startTime ti
 		}
 	}
 }
-
 func (w *Wenhua) MinuteKlinesByTradingDay(subjectKey oqgo.SubjectKey, tradingDay time.Time) ([]oqgo.Kline, error) {
 	startTime, endTime := chnfutures.TimeRangeByTradingDay(tradingDay) // 获取交易日的开始和结束时间
 	return w.MinuteKlinesByDatetime(subjectKey, startTime, endTime)    // 调用新的方法获取分钟线数据
 }
-
 func (w *Wenhua) MinuteKlinesUntilAligned(subjectKey oqgo.SubjectKey, count int, endTime time.Time) ([]oqgo.Kline, error) {
 	symbol, err := w.convertSubjectKeyToSymbol(subjectKey)
 	if err != nil {
@@ -129,7 +125,6 @@ func (w *Wenhua) MinuteKlinesUntilAligned(subjectKey oqgo.SubjectKey, count int,
 	}
 	return oKlines, nil
 }
-
 func (w *Wenhua) SubscribeQuote(subjectKey oqgo.SubjectKey, c func(oqgo.ITick)) (oqgo.IQuoteSubscriber, error) {
 	symbol, err := w.convertSubjectKeyToSymbol(subjectKey)
 	if err != nil {
@@ -145,7 +140,6 @@ func (w *Wenhua) SubscribeQuote(subjectKey oqgo.SubjectKey, c func(oqgo.ITick)) 
 func (w *Wenhua) Name() string {
 	return "github.com/oqgo/wenhua"
 }
-
 func NewWenhua() *Wenhua {
 	return &Wenhua{}
 }
