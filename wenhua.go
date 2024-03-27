@@ -48,15 +48,16 @@ func (w *Wenhua) convertSubjectKeyToSymbol(subjectKey oqgo.SubjectKey) (string, 
 		return "", fmt.Errorf("invalid subject key")
 	}
 	symbol := splited[1]
-	w.subjectKeyMap.Store(symbol, subjectKey) // 缓存subjectKey到symbol的映射关系
 	reg := regexp.MustCompile(`([A-Za-z]+)(\d+)`)
 	res := reg.FindStringSubmatch(symbol)
 	productCode := res[1]
 	yearMonth := res[2]
 	if len(yearMonth) == 3 {
 		yearMonth = time.Now().Format("2006")[2:3] + yearMonth
+		symbol = productCode + yearMonth
 	}
-	return productCode + yearMonth, nil
+	w.subjectKeyMap.Store(symbol, subjectKey) // 缓存subjectKey到symbol的映射关系
+	return symbol, nil
 }
 func (w *Wenhua) MinuteKlinesByDatetime(subjectKey oqgo.SubjectKey, startTime time.Time, endTime time.Time) ([]oqgo.Kline, error) {
 	symbol, err := w.convertSubjectKeyToSymbol(subjectKey)
@@ -133,7 +134,7 @@ func (w *Wenhua) SubscribeQuote(subjectKey oqgo.SubjectKey, c func(oqgo.ITick)) 
 	publisher, ok := w.subscribedSymbols.LoadOrStore(symbol, oqgo.NewPublisher[oqgo.ITick]())
 	if !ok {
 		w.client.SubscribeTick(symbol)
-		w.ctx.Info("新订阅行情：", string(subjectKey))
+		w.ctx.Info("新订阅行情：", string(subjectKey), symbol)
 	}
 	return publisher.Subscribe(c), nil
 }
