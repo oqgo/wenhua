@@ -50,11 +50,13 @@ func (w *Wenhua) convertSubjectKeyToSymbol(subjectKey oqgo.SubjectKey) (string, 
 	symbol := splited[1]
 	reg := regexp.MustCompile(`([A-Za-z]+)(\d+)`)
 	res := reg.FindStringSubmatch(symbol)
-	productCode := res[1]
-	yearMonth := res[2]
-	if len(yearMonth) == 3 {
-		yearMonth = time.Now().Format("2006")[2:3] + yearMonth
-		symbol = productCode + yearMonth
+	if len(res) == 3 {
+		productCode := res[1]
+		yearMonth := res[2]
+		if len(yearMonth) == 3 {
+			yearMonth = time.Now().Format("2006")[2:3] + yearMonth
+			symbol = productCode + yearMonth
+		}
 	}
 	w.subjectKeyMap.Store(symbol, subjectKey) // 缓存subjectKey到symbol的映射关系
 	return symbol, nil
